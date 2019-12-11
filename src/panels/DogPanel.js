@@ -1,0 +1,119 @@
+import React from "react"
+import { Panel, PanelHeader, HeaderButton, platform, ANDROID, Group, FormLayout, Input, Textarea, Button } from '@vkontakte/vkui';
+import Icon24Back from '@vkontakte/icons/dist/24/back';
+import Icon28ChevronBack from '@vkontakte/icons/dist/28/chevron_back';
+
+class DogPanel extends React.Component {
+    constructor(props) {
+        super(props);
+        const dog = {name: "", age: "", sex: "", breed: "", size: "", info:""};        //загрузить инфу по dogiD
+        this.state = {
+            id: this.props.id,
+            userId: this.props.userId,
+            dogId: this.props.dogId,
+            name: dog.name,
+            age: dog.age,
+            sex: dog.sex,
+            breed: dog.breed,
+            size: dog.size,
+            comments: dog.info
+        }
+        this.handleInputChange = this.handleInputChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+    }
+    componentDidMount() {
+        this.props.onDataLoad();  
+        //fetch("http://127.0.0.1:8000/api/dogs/" + this.state.dogId)
+        fetch("https://www.walkie-doggie.ru/api/dogs/" + this.state.dogId)
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    console.log(result);
+                    this.setState({
+                        name: result.name,
+                        age: result.age,
+                        sex: result.sex,
+                        breed: result.breed,
+                        size: result.size,
+                        comments: result.info
+                    });
+                    this.props.onDataLoad();
+                }
+            )
+    }
+    handleInputChange(event) {
+        const target = event.target;
+        const value = target.value;
+        const name = target.name;
+    
+        this.setState({
+          [name]: value
+        });
+    }
+    handleSubmit(event) {
+        this.props.onDataLoad();
+        //alert(this.state.name + " " + this.state.age + " " + this.state.sex + " " + this.state.breed + " " + this.state.size+ " " + this.state.comments + " " + this.state.dogId + " " + this.state.userId);
+        //fetch("http://127.0.0.1:8000/api/dogs/" + this.state.dogId, {
+        fetch("https://www.walkie-doggie.ru/api/dogs/" + this.state.dogId, {
+            method: 'PUT',
+            headers: {
+                //'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+                //'Accept': 'application/json',                  
+            },
+            body: JSON.stringify({
+                name: this.state.name,
+                age: this.state.age,
+                sex: this.state.sex,
+                breed: this.state.breed,
+                size: this.state.size,
+                info: this.state.comments,                       
+            })
+        })
+            .then(response => response.json())
+            .then(
+                (result) => {
+                    //console.log(result);
+
+                    this.props.onDataLoad();
+                    this.props.onClickBack();
+                },
+                (error) => {
+                    this.setState({
+                    });
+                })
+
+    }
+    render() {
+        const osname = platform();
+        //console.log(this);
+        return (
+            <Panel id={this.state.id}>
+                <PanelHeader
+                    left={
+                        <HeaderButton onClick={() => this.props.onClickBack()}>
+                            {osname === ANDROID ? <Icon24Back /> : <Icon28ChevronBack />}
+                        </HeaderButton>
+                    }
+                >
+                    Просмотр питомца
+                </PanelHeader>
+                <Group title="Вы можете поменять информацию о собаке">
+                    <FormLayout>
+                        <Input top="Кличка"           name="name"     value={this.state.name} onChange={this.handleInputChange}/>
+                        <Input top="Возраст"            name="age"      value={this.state.age} onChange={this.handleInputChange}/>
+                        <Input top="Пол"            name="sex"      value={this.state.sex} onChange={this.handleInputChange}/>
+                        <Input top="Порода"          name="breed"    value={this.state.breed} onChange={this.handleInputChange}/>
+                        <Input top="Размер"           name="size"     value={this.state.size} onChange={this.handleInputChange}/>
+                        <Textarea top="Комментарии"    name="comments" value={this.state.comments} onChange={this.handleInputChange}/>
+                        <Button size="xl" level="primary" onClick={this.handleSubmit}>Сохранить</Button>
+                    </FormLayout>
+                </Group>
+                <Group title="DO you want any stats here?">
+
+                </Group>
+            </Panel>
+        )
+    }
+}
+export default DogPanel
